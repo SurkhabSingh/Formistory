@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 12 — media / social noise</title>
+  <link rel="stylesheet" href="testbed.css">
+  <style>
+    .player { border: 1px solid #c33; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .player h2 { color: #c33; margin-top: 0; }
+    .real { border: 1px solid #383; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .real h2 { color: #383; margin-top: 0; }
+    .row { display: flex; align-items: center; gap: .6rem; margin: .5rem 0; }
+    .row > label { margin: 0; font-weight: 400; }
+    .box { width: 16px; height: 16px; border: 1px solid #666; display: inline-block; border-radius: 3px; }
+    [role=switch] { display: inline-block; width: 34px; height: 18px; border-radius: 9px; border: 1px solid #666; }
+    [role=switch][aria-checked="true"] { background: #383; }
+  </style>
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>12 — Media / social noise</h1>
+<p class="expect">
+  <strong>Expect: the player region produces ZERO records.</strong> Drag the volume, click like,
+  toggle the switches, type in search — nothing should be archived. The real form below (three
+  answers) must still be captured. This is the regression that shipped: a volume drag was creating
+  records titled after the video.
+</p>
+
+<div class="player" role="region" aria-label="Video player">
+  <h2>Mock media player — must never be captured</h2>
+
+  <div class="row">
+    <label for="vol">Volume (input[type=range])</label>
+    <input id="vol" name="volume" type="range" min="0" max="100" value="50" aria-label="Volume">
+  </div>
+
+  <div class="row">
+    <span>Volume (role=slider)</span>
+    <div role="slider" aria-label="Volume" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"
+         tabindex="0" style="width:120px;height:6px;background:#ccc"></div>
+  </div>
+
+  <div class="row">
+    <span>Like</span>
+    <div id="like" role="checkbox" aria-checked="false" aria-label="Like this video" tabindex="0"
+         class="box"></div>
+  </div>
+
+  <div class="row">
+    <label>Autoplay</label>
+    <div id="autoplay" role="switch" aria-checked="true" aria-label="Autoplay" tabindex="0"></div>
+    <label>Subtitles</label>
+    <div id="cc" role="switch" aria-checked="false" aria-label="Subtitles" tabindex="0"></div>
+  </div>
+
+  <div class="row">
+    <label>Theme colour</label>
+    <input type="color" name="accent" value="#3366cc" aria-label="Accent colour">
+  </div>
+
+  <div class="row">
+    <label for="site-search">Search this site</label>
+    <input id="site-search" name="q" type="search" placeholder="Search videos…">
+  </div>
+
+  <div class="row">
+    <label>Settings (three checked toggles, like a cookie banner)</label>
+  </div>
+  <div class="row"><input type="checkbox" checked> Autoplay next</div>
+  <div class="row"><input type="checkbox" checked> Annotations</div>
+  <div class="row"><input type="checkbox" checked> Stable volume</div>
+</div>
+
+<div class="real" role="form" aria-label="Feedback">
+  <h2>A real form on the same page — must be captured</h2>
+  <label for="fb-name">Your name</label>
+  <input id="fb-name" name="fb-name" type="text">
+  <label for="fb-email">Email</label>
+  <input id="fb-email" name="fb-email" type="email">
+  <label for="fb-msg">What did you think?</label>
+  <textarea id="fb-msg" name="fb-msg" rows="3"></textarea>
+  <button type="button" id="fb-send">Submit feedback</button>
+</div>
+
+<script>
+  // Minimal widget behaviour so the page can be exercised by hand.
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest('[role=checkbox], [role=switch]');
+    if (!t) return;
+    t.setAttribute("aria-checked", t.getAttribute("aria-checked") === "true" ? "false" : "true");
+    t.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  document.getElementById("fb-send").addEventListener("click", () => {
+    document.getElementById("fb-send").textContent = "Sent (test page — nothing left this tab)";
+  });
+</script>
+</body>
+</html>

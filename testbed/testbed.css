@@ -1,0 +1,25 @@
+body { font: 15px/1.6 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+h1 { font-size: 20px; margin-bottom: .5rem; }
+.expect { background: #f6f6f6; border-left: 3px solid #888; padding: .6rem .8rem; font-size: 13px; }
+.warn { color: #a40; }
+label { display: block; margin-top: 1rem; font-weight: 600; }
+label.inline { display: block; font-weight: 400; margin-top: .35rem; }
+input, textarea, select { display: block; width: 100%; padding: .4rem; margin-top: .25rem;
+  font: inherit; box-sizing: border-box; }
+label.inline input { display: inline-block; width: auto; margin-right: .4rem; }
+fieldset { margin-top: 1rem; }
+button { margin-top: 1.2rem; padding: .5rem 1rem; font: inherit; }
+.q { font-weight: 600; margin-top: 1rem; }
+.hint { color: #666; font-size: 13px; }
+[contenteditable] { border: 1px solid #bbb; min-height: 4rem; padding: .4rem; margin-top: .25rem; }
+.step { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; }
+.opt { display: flex; align-items: center; gap: .5rem; margin: .3rem 0; cursor: pointer; }
+.box { width: 16px; height: 16px; border: 1px solid #666; display: inline-block; }
+.box[aria-checked="true"], [role=radio][aria-checked="true"] .box { background: #333; }
+@media (prefers-color-scheme: dark) {
+  body { background: #1c1c1c; color: #eee; }
+  .expect { background: #2a2a2a; border-color: #666; }
+  .hint { color: #aaa; }
+  input, textarea, select, [contenteditable] { background: #262626; color: #eee; border: 1px solid #444; }
+  .step { border-color: #444; }
+}

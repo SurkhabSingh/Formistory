@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 09 — custom widgets</title>
+  <link rel="stylesheet" href="testbed.css">
+  <style>
+    .rs { position: relative; }
+    .rs-control { border: 1px solid #bbb; padding: .4rem; margin-top: .25rem; cursor: pointer; }
+    .rs-menu { border: 1px solid #bbb; border-top: 0; }
+    .rs-menu[hidden] { display: none; }
+    .rs-opt { padding: .35rem .5rem; cursor: pointer; }
+    .rs-opt:hover { background: #eee; }
+    .tags span { background: #eee; padding: 1px 6px; border-radius: 10px; margin-right: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>09 — Custom widgets</h1>
+<p class="expect">
+  <strong>Expect:</strong> the widgets that keep a real control (the hidden-input-backed react-select
+  clone writes to a <em>text</em> input, not a hidden one) are captured with their question. The
+  <code>role=combobox</code> and <code>contenteditable</code> fields are captured too. Note the
+  file input records only a <em>filename</em>, never file contents — and a value set purely in JS
+  state with no DOM control behind it is a genuine blind spot.
+</p>
+
+<form>
+  <label for="w-combo">Country (role=combobox on a native input)</label>
+  <input id="w-combo" name="w-combo" type="text" role="combobox" aria-expanded="false" placeholder="Start typing…">
+
+  <div class="rs">
+    <div class="q" id="rs-label">Skills (react-select style)</div>
+    <div class="rs-control" id="rs-control" role="button" tabindex="0" aria-labelledby="rs-label">Click to choose…</div>
+    <div class="rs-menu" id="rs-menu" hidden>
+      <div class="rs-opt" data-v="TypeScript">TypeScript</div>
+      <div class="rs-opt" data-v="Rust">Rust</div>
+      <div class="rs-opt" data-v="Go">Go</div>
+    </div>
+    <div class="tags" id="rs-tags"></div>
+    <!-- The chosen values are mirrored into a real, visible control so they are
+         capturable. A widget that keeps its state only in JS is not. -->
+    <label for="rs-value">Selected skills</label>
+    <input id="rs-value" name="rs-value" type="text" readonly>
+  </div>
+
+  <label for="w-rich">Cover letter (contenteditable rich text)</label>
+  <div id="w-rich" contenteditable="true" aria-label="Cover letter"></div>
+
+  <label for="w-range">Expected salary (range)</label>
+  <input id="w-range" name="w-range" type="range" min="40" max="250" step="5" value="120">
+
+  <label for="w-date">Start date</label>
+  <input id="w-date" name="w-date" type="date">
+
+  <label for="w-time">Preferred interview time</label>
+  <input id="w-time" name="w-time" type="time">
+
+  <label for="w-colour">Favourite colour (silly, but it is an input type)</label>
+  <input id="w-colour" name="w-colour" type="color" value="#3366cc">
+
+  <label for="w-file">Résumé (filename only — contents are never read)</label>
+  <input id="w-file" name="w-file" type="file">
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+  const menu = document.getElementById("rs-menu");
+  const chosen = new Set();
+  document.getElementById("rs-control").addEventListener("click", () => { menu.hidden = !menu.hidden; });
+  menu.addEventListener("click", (e) => {
+    const opt = e.target.closest(".rs-opt");
+    if (!opt) return;
+    chosen.has(opt.dataset.v) ? chosen.delete(opt.dataset.v) : chosen.add(opt.dataset.v);
+    document.getElementById("rs-tags").innerHTML = [...chosen].map((v) => `<span>${v}</span>`).join("");
+    const mirror = document.getElementById("rs-value");
+    mirror.value = [...chosen].join(", ");
+    // Mirror writes must announce themselves, exactly as a real widget would.
+    mirror.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+</script>
+</body>
+</html>

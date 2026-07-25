@@ -1,0 +1,17 @@
+node_modules/
+
+# Build/packaging output
+*.zip
+*.crx
+*.xpi
+web-ext-artifacts/
+
+# Never commit a real archive export — these contain captured form answers.
+form-archive-*.json
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

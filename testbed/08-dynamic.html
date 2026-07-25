@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 08 — dynamic fields</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>08 — Dynamic fields</h1>
+<p class="expect">
+  <strong>Expect:</strong> every field is captured no matter when it appears. Capture listens on the
+  document rather than binding to elements at load, so late mounts, conditional reveals and repeater
+  rows all work. Answer the conditional question "Yes" to reveal two more fields, and add a couple of
+  employment rows.
+</p>
+
+<form>
+  <label for="d-name">Name (present at load)</label>
+  <input id="d-name" name="d-name" type="text">
+
+  <div id="late"></div>
+
+  <fieldset>
+    <legend>Do you require visa sponsorship?</legend>
+    <label class="inline"><input type="radio" name="d-visa" value="Yes"> Yes</label>
+    <label class="inline"><input type="radio" name="d-visa" value="No"> No</label>
+  </fieldset>
+
+  <div id="conditional" hidden>
+    <label for="d-visa-type">Which visa do you hold?</label>
+    <input id="d-visa-type" name="d-visa-type" type="text">
+    <label for="d-visa-expiry">Visa expiry</label>
+    <input id="d-visa-expiry" name="d-visa-expiry" type="date">
+  </div>
+
+  <h2>Employment history (repeater)</h2>
+  <div id="rows"></div>
+  <button type="button" id="add-row">Add another employer</button>
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+  // 1. A field mounted well after document_idle.
+  setTimeout(() => {
+    document.getElementById("late").innerHTML = `
+      <label for="d-late">Field injected 1.5s after load</label>
+      <input id="d-late" name="d-late" type="text">`;
+  }, 1500);
+
+  // 2. A conditional block revealed by an earlier answer.
+  document.addEventListener("change", (e) => {
+    if (e.target.name !== "d-visa") return;
+    document.getElementById("conditional").hidden = e.target.value !== "Yes";
+  });
+
+  // 3. A repeater that clones rows with distinct labels.
+  let row = 0;
+  document.getElementById("add-row").addEventListener("click", () => {
+    row++;
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label for="d-emp-${row}">Employer ${row}</label>
+      <input id="d-emp-${row}" name="d-emp-${row}" type="text">
+      <label for="d-role-${row}">Role at employer ${row}</label>
+      <input id="d-role-${row}" name="d-role-${row}" type="text">`;
+    document.getElementById("rows").append(div);
+  });
+</script>
+</body>
+</html>

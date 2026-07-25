@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 11 — rejected submissions</title>
+  <link rel="stylesheet" href="testbed.css">
+  <style>
+    .err { color: #a40; font-size: 13px; margin-top: .25rem; }
+    .ok { color: #060; font-weight: 600; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>11 — Rejected submissions</h1>
+<p class="expect">
+  <strong>Expect: exactly ONE record, however many times you press Submit.</strong>
+  Try it: press Submit with fields missing (native validation blocks it), then again with a bad
+  email (custom validation rejects it), then fill everything in and submit properly.
+  <br><br>
+  A click on Submit is an <em>attempt</em>, not an outcome. Rejected attempts must stay
+  <code>draft</code>; only the accepted one becomes <code>submitted</code>. And every attempt must
+  update the same record — one application, not one per press.
+</p>
+
+<form id="app" novalidate>
+  <label for="v-name">Full name (required)</label>
+  <input id="v-name" name="v-name" required>
+
+  <label for="v-email">Email (required, must contain @)</label>
+  <input id="v-email" name="v-email" required>
+  <div class="err" id="e-email" hidden>Please enter a valid email address.</div>
+
+  <label for="v-why">Why this role? (required, min 10 characters)</label>
+  <textarea id="v-why" name="v-why" rows="3" required></textarea>
+  <div class="err" id="e-why" hidden>Please write at least 10 characters.</div>
+
+  <button type="button" id="go">Submit application</button>
+  <p class="ok" id="done" hidden>Accepted. (Nothing actually sent — this is a test page.)</p>
+  <p class="hint" id="attempts">Attempts: 0</p>
+</form>
+
+<script>
+  let attempts = 0;
+
+  document.getElementById("go").addEventListener("click", () => {
+    attempts++;
+    document.getElementById("attempts").textContent = `Attempts: ${attempts}`;
+
+    const email = document.getElementById("v-email");
+    const why = document.getElementById("v-why");
+    const name = document.getElementById("v-name");
+
+    const emailBad = !email.value.includes("@");
+    const whyBad = why.value.trim().length < 10;
+    const nameBad = !name.value.trim();
+
+    // Custom validation marks fields with aria-invalid, which is the signal the
+    // extension uses when there is no native constraint validation to consult.
+    email.setAttribute("aria-invalid", String(emailBad));
+    why.setAttribute("aria-invalid", String(whyBad));
+    name.setAttribute("aria-invalid", String(nameBad));
+    document.getElementById("e-email").hidden = !emailBad;
+    document.getElementById("e-why").hidden = !whyBad;
+
+    const rejected = emailBad || whyBad || nameBad;
+    document.getElementById("done").hidden = rejected;
+    if (!rejected) document.getElementById("go").disabled = true;
+  });
+</script>
+</body>
+</html>

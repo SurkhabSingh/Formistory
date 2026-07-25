@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 10 — hostile markup</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>10 — Hostile markup</h1>
+<p class="expect">
+  <strong>Expect:</strong> graceful degradation, not failure. Fields with a usable question resolve
+  normally; fields with nothing at all are still <em>stored with their answer</em> and simply carry no
+  label. What must never happen is a <em>confidently wrong</em> label — a field inheriting the
+  previous question's text, or a CSS rule, or a generic placeholder being treated as a question.
+</p>
+
+<form>
+  <div>A question in a plain div, no label element</div>
+  <input name="h-plain" type="text">
+
+  <!-- The killer: an unlabelled field directly after a labelled one. It must NOT
+       inherit "A question in a plain div" from two siblings back. -->
+  <input name="h-orphan" type="text">
+
+  <!-- Inline style between fields, as real Greenhouse forms emit. Must never be
+       read as a label. -->
+  <style>.remix-css-1a0ro4n{opacity:0;position:absolute;pointer-events:none}</style>
+  <input name="h-after-style" type="text">
+
+  <div>Generic placeholders only</div>
+  <input name="h-ph1" type="text" placeholder="Type here…">
+  <input name="h-ph2" type="text" placeholder="Select…">
+  <input name="h-ph3" type="text" placeholder="hello@example.com">
+  <input name="h-ph4" type="text" placeholder="MM/DD/YYYY">
+  <input name="h-ph5" type="text" placeholder="1-415-555-1234">
+
+  <div>A genuinely useful placeholder</div>
+  <input name="h-ph-good" type="text" placeholder="LinkedIn URL">
+
+  <!-- No id, no name, no label, no placeholder: the true worst case. The answer
+       must still be stored, just unlabelled. -->
+  <div>Absolutely nothing to go on:</div>
+  <input type="text">
+
+  <!-- A label containing only an icon: must not score as a resolved label. -->
+  <label><span aria-hidden="true">★</span><input name="h-icon" type="text"></label>
+
+  <!-- Two options sharing no distinguishing text: unchecking one must not delete
+       the other's answer. -->
+  <fieldset>
+    <legend>Pick one</legend>
+    <label class="inline"><input type="radio" name="h-pick" value="A"> A</label>
+    <label class="inline"><input type="radio" name="h-pick" value="B"> B</label>
+  </fieldset>
+
+  <button type="submit">Submit</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 05 — multi-step wizard</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>05 — Multi-step wizard (Easy Apply / Workday shape)</h1>
+<p class="expect">
+  <strong>Expect: ONE document containing all 6 answers</strong> — not one per step.
+  This is the shape that LinkedIn Easy Apply and Workday use: a paged modal, no navigation, no URL
+  change, and the <code>&lt;form&gt;</code> element is <em>replaced</em> on every step. Clicking
+  <em>Next</em> must persist progress without finalising; only <em>Submit application</em> finalises.
+  Earlier steps' answers must survive to the end.
+</p>
+
+<div id="modal" class="step" role="dialog" aria-label="Easy Apply">
+  <p class="hint" id="progress">Step 1 of 3</p>
+  <div id="mount"></div>
+  <button type="button" id="back" hidden>Back</button>
+  <button type="button" id="next">Next</button>
+  <button type="button" id="submit" hidden>Submit application</button>
+  <p id="done" class="hint" hidden>Submitted (nothing actually sent — this is a test page).</p>
+</div>
+
+<script>
+  // Each step renders a brand new <form> node. Node-identity scope keying would
+  // mint a fresh draft per step and scatter one application across three
+  // documents; position-based keying survives the swap.
+  const STEPS = [
+    `<form>
+       <label for="w-name">Full name</label><input id="w-name" name="w-name" type="text">
+       <label for="w-email">Email</label><input id="w-email" name="w-email" type="email">
+     </form>`,
+    `<form>
+       <label for="w-exp">Years of experience</label><input id="w-exp" name="w-exp" type="number">
+       <fieldset><legend>Are you legally authorized to work?</legend>
+         <label class="inline"><input type="radio" name="w-auth" value="Yes"> Yes</label>
+         <label class="inline"><input type="radio" name="w-auth" value="No"> No</label>
+       </fieldset>
+     </form>`,
+    `<form>
+       <label for="w-why">Why this role?</label><textarea id="w-why" name="w-why" rows="4"></textarea>
+       <label class="inline"><input type="checkbox" name="w-follow" value="Yes"> Follow this company</label>
+     </form>`,
+  ];
+
+  const answers = {}; // the page keeps its own state, as a real wizard would
+  let step = 0;
+
+  const $mount = document.getElementById("mount");
+  const $next = document.getElementById("next");
+  const $back = document.getElementById("back");
+  const $submit = document.getElementById("submit");
+  const $progress = document.getElementById("progress");
+
+  function save() {
+    $mount.querySelectorAll("input, textarea, select").forEach((el) => {
+      const key = el.name + (el.type === "radio" ? ":" + el.value : "");
+      answers[key] = el.type === "radio" || el.type === "checkbox" ? el.checked : el.value;
+    });
+  }
+
+  function render() {
+    $mount.innerHTML = STEPS[step];
+    $mount.querySelectorAll("input, textarea, select").forEach((el) => {
+      const key = el.name + (el.type === "radio" ? ":" + el.value : "");
+      if (!(key in answers)) return;
+      if (el.type === "radio" || el.type === "checkbox") el.checked = answers[key];
+      else el.value = answers[key];
+    });
+    $progress.textContent = `Step ${step + 1} of ${STEPS.length}`;
+    $back.hidden = step === 0;
+    $next.hidden = step === STEPS.length - 1;
+    $submit.hidden = step !== STEPS.length - 1;
+  }
+
+  $next.addEventListener("click", () => { save(); step++; render(); });
+  $back.addEventListener("click", () => { save(); step--; render(); });
+  $submit.addEventListener("click", () => {
+    save();
+    document.getElementById("modal").querySelectorAll("button").forEach((b) => (b.hidden = true));
+    document.getElementById("done").hidden = false;
+  });
+
+  render();
+</script>
+</body>
+</html>

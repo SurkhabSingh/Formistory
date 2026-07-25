@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 07 — sensitive data</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>07 — Sensitive data</h1>
+<p class="expect">
+  <strong>Expect:</strong> the <span class="warn">excluded</span> fields must be absent from the
+  record entirely, and the <span class="warn">redacted</span> ones must be stored with their
+  <em>question intact</em> but the value replaced by <code>[redacted]</code>. Losing "you were asked
+  for an SSN here" would be worse than losing the digits.
+  The EEO block is stored normally — it is the user's own answer — but it is GDPR Article 9
+  special-category data, which is why retention and delete are first-class in Phase 3.
+</p>
+
+<form>
+  <h2>Should be captured normally</h2>
+  <label for="s-name">Full name</label>
+  <input id="s-name" name="s-name" type="text" value="Ada Lovelace">
+
+  <h2 class="warn">Must be EXCLUDED (never stored at all)</h2>
+  <label for="s-pw">Password</label>
+  <input id="s-pw" name="s-pw" type="password" autocomplete="new-password" value="hunter2">
+
+  <label for="s-cc">Card number (autocomplete=cc-number)</label>
+  <input id="s-cc" name="s-cc" type="text" autocomplete="cc-number" value="4111 1111 1111 1111">
+
+  <label for="s-cvv">Security code (autocomplete=cc-csc)</label>
+  <input id="s-cvv" name="s-cvv" type="text" autocomplete="cc-csc" value="123">
+
+  <label for="s-otp">One-time code</label>
+  <input id="s-otp" name="s-otp" type="text" autocomplete="one-time-code" value="482913">
+
+  <input type="hidden" name="csrf_token" value="tok-should-never-appear">
+  <textarea name="g-recaptcha-response" rows="1">bot-token-should-never-appear</textarea>
+
+  <h2 class="warn">Must be REDACTED (question kept, value replaced)</h2>
+  <label for="s-ssn">Social Security Number</label>
+  <input id="s-ssn" name="s-ssn" type="text" value="123-45-6789">
+
+  <label for="s-card-plain">Payment card (plain text box, no autocomplete hint)</label>
+  <input id="s-card-plain" name="s-card-plain" type="text" value="4111111111111111">
+
+  <label for="s-dob">Date of birth</label>
+  <input id="s-dob" name="s-dob" type="text" value="1815-12-10">
+
+  <label for="s-passport">Passport number</label>
+  <input id="s-passport" name="s-passport" type="text" value="X1234567">
+
+  <h2>Must NOT be redacted (false-positive check)</h2>
+  <label for="s-order">Order reference (16 digits, fails Luhn)</label>
+  <input id="s-order" name="s-order" type="text" value="4111111111111112">
+
+  <label for="s-emp">Employee number (9 digits)</label>
+  <input id="s-emp" name="s-emp" type="text" value="123456789">
+
+  <h2>EEO self-identification (GDPR Article 9)</h2>
+  <label for="s-gender">Gender</label>
+  <select id="s-gender" name="s-gender">
+    <option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option>
+  </select>
+
+  <label for="s-race">Race / ethnicity</label>
+  <select id="s-race" name="s-race">
+    <option value="">Prefer not to say</option><option>Asian</option><option>Black or African American</option>
+    <option>Hispanic or Latino</option><option>White</option><option>Two or more races</option>
+  </select>
+
+  <label for="s-vet">Veteran status</label>
+  <select id="s-vet" name="s-vet">
+    <option value="">Prefer not to say</option><option>I am a protected veteran</option><option>I am not a protected veteran</option>
+  </select>
+
+  <label for="s-dis">Disability status</label>
+  <select id="s-dis" name="s-dis">
+    <option value="">Prefer not to say</option><option>Yes</option><option>No</option>
+  </select>
+
+  <button type="submit">Submit</button>
+</form>
+</body>
+</html>

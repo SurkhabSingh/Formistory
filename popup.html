@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Formistory</title>
+  <style>
+    body { font: 13px/1.5 system-ui, sans-serif; width: 340px; margin: 0; padding: 12px; }
+    h1 { font-size: 13px; margin: 0 0 8px; display: flex; justify-content: space-between; }
+    .count { color: #555; font-weight: 400; }
+    ul { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+    li { padding: 6px 0; border-top: 1px solid #e5e5e5; }
+    .title { font-weight: 600; }
+    .meta { color: #666; font-size: 11px; }
+    .status { text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+    .empty { color: #666; padding: 12px 0; }
+    button { font: inherit; margin-top: 10px; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1e1e1e; color: #eee; }
+      li { border-color: #383838; }
+      .count, .meta, .empty { color: #aaa; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Formistory <span class="count" id="count">…</span></h1>
+  <ul id="list"></ul>
+  <p class="empty" id="empty" hidden>Nothing captured yet. Fill in a form and come back.</p>
+  <button id="open">Open archive</button>
+  <script src="src/popup.js"></script>
+</body>
+</html>

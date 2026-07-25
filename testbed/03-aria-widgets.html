@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 03 — ARIA widgets</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>03 — ARIA widgets (no native inputs)</h1>
+<p class="expect">
+  <strong>Expect:</strong> 4 fields. Not one native radio or checkbox exists here — every choice is a
+  <code>div[role=radio]</code> or <code>div[role=checkbox]</code>, the Google Forms shape. Note the
+  radios sit under <code>role=radiogroup</code> but the checkboxes under <code>role=list</code>:
+  different roles, both carrying the question via <code>aria-labelledby</code>. Each group must
+  become ONE field labelled with its question.
+</p>
+
+<div id="q1" role="heading" aria-level="2">How familiar are you with distributed systems?</div>
+<div role="radiogroup" aria-labelledby="q1">
+  <div class="opt" role="radio" aria-checked="false" data-value="Not at all" tabindex="0">
+    <span class="box"></span><span>Not at all</span></div>
+  <div class="opt" role="radio" aria-checked="false" data-value="Some exposure" tabindex="0">
+    <span class="box"></span><span>Some exposure</span></div>
+  <div class="opt" role="radio" aria-checked="false" data-value="I have shipped them" tabindex="0">
+    <span class="box"></span><span>I have shipped them</span></div>
+  <div class="opt" role="radio" aria-checked="false" data-value="__other_option__" tabindex="0">
+    <span class="box"></span><span>Other:</span></div>
+</div>
+
+<div id="q2" role="heading" aria-level="2">Which languages would you use day to day?</div>
+<div role="list" aria-labelledby="q2">
+  <div role="listitem"><div class="opt" role="checkbox" aria-checked="false" aria-label="Rust" tabindex="0">
+    <span class="box"></span><span>Rust</span></div></div>
+  <div role="listitem"><div class="opt" role="checkbox" aria-checked="false" aria-label="TypeScript" tabindex="0">
+    <span class="box"></span><span>TypeScript</span></div></div>
+  <div role="listitem"><div class="opt" role="checkbox" aria-checked="false" aria-label="Go" tabindex="0">
+    <span class="box"></span><span>Go</span></div></div>
+</div>
+
+<div id="q3" role="heading" aria-level="2">Anything else we should know?</div>
+<div role="textbox" contenteditable="true" aria-labelledby="q3"></div>
+
+<div id="q4" role="heading" aria-level="2">Preferred contact method</div>
+<div role="radiogroup" aria-labelledby="q4">
+  <div class="opt" role="radio" aria-checked="false" data-value="Email" tabindex="0">
+    <span class="box"></span><span>Email</span></div>
+  <div class="opt" role="radio" aria-checked="false" data-value="Phone" tabindex="0">
+    <span class="box"></span><span>Phone</span></div>
+</div>
+
+<button type="button" id="submit">Submit</button>
+
+<script>
+  // Minimal widget behaviour so the page is actually usable by hand.
+  document.addEventListener("click", (e) => {
+    const opt = e.target.closest('[role=radio], [role=checkbox]');
+    if (!opt) return;
+    const checked = opt.getAttribute("aria-checked") === "true";
+    if (opt.getAttribute("role") === "radio") {
+      const group = opt.closest("[role=radiogroup]");
+      group.querySelectorAll('[role=radio]').forEach((r) => r.setAttribute("aria-checked", "false"));
+    }
+    opt.setAttribute("aria-checked", checked ? "false" : "true");
+    // Real widgets fire change so assistive tech and listeners notice.
+    opt.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+</script>
+</body>
+</html>

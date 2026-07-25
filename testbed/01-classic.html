@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 01 — classic HTML form</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>01 — Classic HTML form</h1>
+<p class="expect">
+  <strong>Expect:</strong> 11 fields, all with readable labels. The radio group stores one field
+  ("Employment type") with the chosen option as its value, not one field per radio. The submit
+  button and the hidden token are not fields.
+</p>
+
+<form id="classic">
+  <label for="name">Full name</label>
+  <input id="name" name="name" type="text" autocomplete="name">
+
+  <label for="email">Email address</label>
+  <input id="email" name="email" type="email" autocomplete="email">
+
+  <label for="phone">Phone number</label>
+  <input id="phone" name="phone" type="tel">
+
+  <label for="site">Portfolio URL</label>
+  <input id="site" name="site" type="url">
+
+  <label for="start">Available from</label>
+  <input id="start" name="start" type="date">
+
+  <label for="years">Years of experience</label>
+  <input id="years" name="years" type="number" min="0" max="50">
+
+  <label for="level">Seniority</label>
+  <select id="level" name="level">
+    <option value="">Choose…</option>
+    <option>Junior</option>
+    <option>Mid</option>
+    <option>Senior</option>
+  </select>
+
+  <label for="langs">Languages (multi-select)</label>
+  <select id="langs" name="langs" multiple size="4">
+    <option>English</option>
+    <option>Hindi</option>
+    <option>Punjabi</option>
+    <option>Japanese</option>
+  </select>
+
+  <fieldset>
+    <legend>Employment type</legend>
+    <label class="inline"><input type="radio" name="employment" value="Full-time"> Full-time</label>
+    <label class="inline"><input type="radio" name="employment" value="Contract"> Contract</label>
+    <label class="inline"><input type="radio" name="employment" value="Internship"> Internship</label>
+  </fieldset>
+
+  <label class="inline"><input type="checkbox" name="relocate" value="Yes"> Willing to relocate</label>
+
+  <label for="why">Why do you want to work here?</label>
+  <textarea id="why" name="why" rows="4"></textarea>
+
+  <input type="hidden" name="csrf_token" value="should-never-be-captured">
+  <button type="submit">Submit application</button>
+</form>
+</body>
+</html>

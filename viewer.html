@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formistory</title>
+  <style>
+    :root {
+      --bg: #fbfbfa; --panel: #fff; --ink: #1c1c1a; --muted: #6b6b66;
+      --line: #e4e4e0; --accent: #3a5f8a; --warn: #a8501e; --sel: #eef2f7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #17171a; --panel: #1f1f23; --ink: #e9e9e6; --muted: #9a9a94;
+        --line: #33333a; --accent: #8fb4de; --warn: #d99a6e; --sel: #262b33;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    header {
+      position: sticky; top: 0; z-index: 2; background: var(--bg);
+      border-bottom: 1px solid var(--line); padding: 14px 20px;
+      display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    }
+    h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+    .count { color: var(--muted); font-size: 13px; }
+    #q {
+      flex: 1; min-width: 200px; padding: 7px 11px; font: inherit;
+      border: 1px solid var(--line); border-radius: 7px;
+      background: var(--panel); color: var(--ink);
+    }
+    #q:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    button {
+      font: inherit; padding: 6px 12px; border: 1px solid var(--line);
+      border-radius: 7px; background: var(--panel); color: var(--ink); cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.danger:hover { border-color: var(--warn); color: var(--warn); }
+
+    main { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; min-height: calc(100vh - 59px); }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; } #detail { border-left: 0; } }
+
+    #list { border-right: 1px solid var(--line); overflow-y: auto; }
+    .day { padding: 12px 20px 4px; font-size: 11px; letter-spacing: .06em;
+           text-transform: uppercase; color: var(--muted); }
+    .item { padding: 11px 20px; border-bottom: 1px solid var(--line); cursor: pointer; }
+    .item:hover { background: var(--sel); }
+    .item[aria-selected="true"] { background: var(--sel); box-shadow: inset 3px 0 0 var(--accent); }
+    .item h2 { font-size: 14px; margin: 0 0 2px; font-weight: 600; }
+    .item .meta { font-size: 12px; color: var(--muted); }
+    .badge { display: inline-block; font-size: 10px; letter-spacing: .05em;
+             text-transform: uppercase; padding: 1px 6px; border-radius: 20px;
+             border: 1px solid var(--line); margin-left: 6px; }
+    .badge.submitted { color: var(--accent); border-color: currentColor; }
+    .badge.abandoned { color: var(--warn); border-color: currentColor; }
+
+    #detail { padding: 24px 28px 60px; overflow-y: auto; }
+    #detail h2 { font-size: 19px; margin: 0 0 4px; letter-spacing: -.01em; }
+    #detail .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; word-break: break-all; }
+    #detail a { color: var(--accent); }
+
+    .qa { margin: 0 0 20px; padding: 0; border: 0; }
+    .qa dt { font-weight: 600; font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+    .qa dd { margin: 0 0 16px; white-space: pre-wrap; }
+    .qa dd.empty { color: var(--muted); font-style: italic; }
+    .redacted { color: var(--warn); font-variant: small-caps; letter-spacing: .04em; }
+    .unlabelled { font-style: italic; }
+    mark { background: #fde68a; color: #1c1c1a; border-radius: 2px; }
+
+    .placeholder { color: var(--muted); padding: 40px 0; text-align: center; }
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); }
+    .empty-state code { background: var(--panel); padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Formistory</h1>
+    <span class="count" id="count"></span>
+    <input id="q" type="search" placeholder="Search questions and answers…" autocomplete="off">
+    <button id="export">Export JSON</button>
+    <button id="clear" class="danger">Delete all</button>
+  </header>
+
+  <main>
+    <div id="list"></div>
+    <div id="detail"><p class="placeholder">Select a form to read it.</p></div>
+  </main>
+
+  <script src="src/viewer.js"></script>
+</body>
+</html>

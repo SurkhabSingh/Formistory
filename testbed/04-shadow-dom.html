@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 04 — shadow DOM</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>04 — Shadow DOM</h1>
+<p class="expect">
+  <strong>Expect:</strong> 3 fields — one light-DOM, one in an open shadow root, one nested two
+  shadow roots deep. The field inside the <span class="warn">closed</span> shadow root must
+  <span class="warn">NOT</span> be captured: <code>attachShadow({mode:'closed'})</code> is
+  unreachable by any extension. Seeing it would mean something is wrong; not seeing it is correct.
+</p>
+
+<label for="plain">Light DOM field</label>
+<input id="plain" name="plain" type="text">
+
+<h2>Open shadow root</h2>
+<div id="open-host"></div>
+
+<h2>Nested open shadow roots</h2>
+<div id="nested-host"></div>
+
+<h2>Closed shadow root <span class="warn">(must not be captured)</span></h2>
+<div id="closed-host"></div>
+
+<script>
+  const style = `<style>
+    label{display:block;font:600 15px system-ui;margin-top:1rem}
+    input{display:block;width:100%;padding:.4rem;margin-top:.25rem;font:inherit;box-sizing:border-box}
+  </style>`;
+
+  const open = document.getElementById("open-host").attachShadow({ mode: "open" });
+  open.innerHTML = style + `
+    <label for="shadow-a">Field inside an open shadow root</label>
+    <input id="shadow-a" name="shadow-a" type="text">`;
+
+  const outer = document.getElementById("nested-host").attachShadow({ mode: "open" });
+  outer.innerHTML = style + `<div id="inner-host"></div>`;
+  const inner = outer.getElementById("inner-host").attachShadow({ mode: "open" });
+  inner.innerHTML = style + `
+    <label for="shadow-b">Field two shadow roots deep</label>
+    <input id="shadow-b" name="shadow-b" type="text">`;
+
+  const closed = document.getElementById("closed-host").attachShadow({ mode: "closed" });
+  closed.innerHTML = style + `
+    <label for="shadow-c">Field inside a CLOSED shadow root</label>
+    <input id="shadow-c" name="shadow-c" type="text">`;
+</script>
+</body>
+</html>

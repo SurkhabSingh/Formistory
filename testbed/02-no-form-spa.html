@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Testbed 02 — SPA with no form element</title>
+  <link rel="stylesheet" href="testbed.css">
+</head>
+<body>
+<p><a href="index.html">&larr; testbed</a></p>
+<h1>02 — SPA with no <code>&lt;form&gt;</code></h1>
+<p class="expect">
+  <strong>Expect:</strong> 5 fields, captured under scope <code>page</code>. There is no form
+  element, no submit event and no navigation — the Ashby shape. "Submit application" is an ordinary
+  button whose handler only updates the DOM, so capture must not depend on a submit event.
+  Field ids are UUIDs, so nothing may rely on id or name being meaningful.
+</p>
+
+<div id="app">
+  <label for="19b1f0c2-8f1a-4c60-9b1e-6a0f0c1d2e3f">Legal name</label>
+  <input id="19b1f0c2-8f1a-4c60-9b1e-6a0f0c1d2e3f" name="19b1f0c2-8f1a-4c60-9b1e-6a0f0c1d2e3f" type="text" placeholder="Type here…">
+
+  <label for="2c7d4a91-3e55-4b7a-8f2d-9c1b0a7e6d55">Email</label>
+  <input id="2c7d4a91-3e55-4b7a-8f2d-9c1b0a7e6d55" name="2c7d4a91-3e55-4b7a-8f2d-9c1b0a7e6d55" type="email" placeholder="hello@example.com…">
+
+  <!-- label[for] points at an id that does not exist; the input has no id at all.
+       Only the container text can rescue this one. -->
+  <label for="_systemfield_location">Where do you plan on working from?</label>
+  <div><input type="text" placeholder="Start typing…"></div>
+
+  <label for="7f3e1d80-5a2c-4e9b-b3f1-8d2a6c4e0b17">Notice period</label>
+  <input id="7f3e1d80-5a2c-4e9b-b3f1-8d2a6c4e0b17" name="7f3e1d80-5a2c-4e9b-b3f1-8d2a6c4e0b17" type="text" placeholder="Type here…">
+
+  <label for="9a8b7c6d-1e2f-3a4b-5c6d-7e8f9a0b1c2d">Describe a project you are proud of</label>
+  <textarea id="9a8b7c6d-1e2f-3a4b-5c6d-7e8f9a0b1c2d" name="9a8b7c6d-1e2f-3a4b-5c6d-7e8f9a0b1c2d" rows="4" placeholder="Type here…"></textarea>
+
+  <button id="send" type="button">Submit application</button>
+  <p id="done" class="hint" hidden>Submitted (nothing actually sent — this is a test page).</p>
+</div>
+
+<script>
+  // No navigation, no form submission: the page just swaps some DOM around,
+  // exactly like a client-rendered ATS.
+  document.getElementById("send").addEventListener("click", () => {
+    document.getElementById("done").hidden = false;
+  });
+</script>
+</body>
+</html>

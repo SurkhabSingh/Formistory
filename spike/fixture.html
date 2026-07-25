@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>field-identity spike fixture</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    fieldset { margin: 1rem 0; }
+    label, .question { display: block; margin-top: 1rem; font-weight: 600; }
+    input, textarea, select { display: block; width: 100%; padding: .4rem; margin-top: .25rem; }
+    [contenteditable] { border: 1px solid #ccc; min-height: 4rem; padding: .4rem; margin-top: .25rem; }
+    .note { color: #666; font-weight: 400; font-size: 12px; }
+  </style>
+</head>
+<body>
+<h1>Field identity fixture</h1>
+<p class="note">
+  Expected: <strong>13 capturable fields, 12 readable (92.3%)</strong>.
+  The one unreadable field is <code>referral_source</code>, which has no label of any kind and must
+  fall back to <code>HUMANIZED_NAME</code> (confidence 0.30). The password, credit-card, and hidden
+  inputs must be excluded entirely and must not appear in the table.
+</p>
+
+<form id="application">
+  <!-- 1. label[for] -->
+  <label for="fullname">Full name</label>
+  <input id="fullname" name="fullname" type="text">
+
+  <!-- 2. wrapping label -->
+  <label>Email address
+    <input name="email" type="email">
+  </label>
+
+  <!-- 3. aria-labelledby (two refs, joined) -->
+  <span id="q3a">Why do you want</span> <span id="q3b">to work here?</span>
+  <textarea name="motivation" aria-labelledby="q3a q3b"></textarea>
+
+  <!-- 4. aria-label -->
+  <input name="phone" type="tel" aria-label="Phone number">
+
+  <!-- 5. legend, two radios both resolving to it -->
+  <fieldset>
+    <legend>Work authorization</legend>
+    <input type="radio" name="authorized" value="yes"> Yes
+    <input type="radio" name="authorized" value="no"> No
+  </fieldset>
+
+  <!-- 6. placeholder only -->
+  <input name="linkedin" type="url" placeholder="LinkedIn URL">
+
+  <!-- 7. no label element at all; preceding sibling text carries the question -->
+  <div class="question">Desired salary</div>
+  <input name="salary" type="text">
+
+  <!-- 8. nothing whatsoever, and an inlined <style> sits between it and the previous
+          question — as real Greenhouse forms do. Must degrade to humanized name and
+          count as UNREADABLE, never pick up the CSS text. -->
+  <style>.remix-css-1a0ro4n-requiredInput{opacity:0;pointer-events:none;position:absolute}</style>
+  <input name="referral_source" type="text">
+
+  <!-- 9. select with label[for] -->
+  <label for="yoe">Years of experience</label>
+  <select id="yoe" name="yoe">
+    <option>0-2</option><option>3-5</option><option>6+</option>
+  </select>
+
+  <!-- 10. contenteditable with aria-label -->
+  <div contenteditable="true" aria-label="Cover letter"></div>
+
+  <!-- 11. shadow DOM host, label[for] lives inside the shadow root -->
+  <div id="shadow-host"></div>
+
+  <!-- 12. injected after load -->
+  <div id="late-mount"></div>
+
+  <!-- EXCLUDED — none of these may appear in the report -->
+  <label for="pw">Password <span class="note">(must be excluded)</span></label>
+  <input id="pw" name="password" type="password" autocomplete="new-password">
+
+  <label for="cc">Card number <span class="note">(must be excluded)</span></label>
+  <input id="cc" name="card" type="text" autocomplete="cc-number">
+
+  <input type="hidden" name="csrf_token" value="abc123">
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+  // 11. open shadow root containing a properly labelled field
+  const host = document.getElementById("shadow-host");
+  const shadow = host.attachShadow({ mode: "open" });
+  shadow.innerHTML = `
+    <style>label{display:block;font:600 14px system-ui;margin-top:1rem}
+           input{display:block;width:100%;padding:.4rem;margin-top:.25rem}</style>
+    <label for="portfolio">Portfolio URL</label>
+    <input id="portfolio" name="portfolio" type="url">
+  `;
+
+  // 12. dynamically injected field, mounted after initial parse
+  setTimeout(() => {
+    document.getElementById("late-mount").innerHTML = `
+      <label for="availability">Availability date</label>
+      <input id="availability" name="availability" type="date">
+    `;
+  }, 100);
+</script>
+</body>
+</html>

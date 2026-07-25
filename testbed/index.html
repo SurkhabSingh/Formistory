@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Formistory — testbed</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: .25rem; }
+    p.lede { color: #555; margin-top: 0; }
+    ol { padding-left: 1.2rem; }
+    li { margin: .8rem 0; }
+    a { font-weight: 600; }
+    .why { display: block; color: #555; font-size: 13px; }
+    .warn { color: #a40; }
+    code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; }
+    @media (prefers-color-scheme: dark) {
+      body { background:#1c1c1c; color:#eee; } p.lede,.why { color:#aaa; } code { background:#333; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Formistory testbed</h1>
+  <p class="lede">
+    Every form shape worth testing against, offline. Load the extension, fill one in, then open the
+    popup. Each page states what <em>should</em> be captured so a wrong result is obvious.
+  </p>
+
+  <ol>
+    <li><a href="01-classic.html">Classic HTML form</a>
+      <span class="why">Every native input type, <code>label[for]</code>, fieldset/legend, select, multi-select.</span></li>
+
+    <li><a href="02-no-form-spa.html">SPA with no <code>&lt;form&gt;</code></a>
+      <span class="why">No form element, no navigation, no submit event — the Ashby shape.</span></li>
+
+    <li><a href="03-aria-widgets.html">ARIA widgets</a>
+      <span class="why">Choices as <code>div[role=radio]</code>/<code>[role=checkbox]</code> — the Google Forms shape.</span></li>
+
+    <li><a href="04-shadow-dom.html">Shadow DOM</a>
+      <span class="why">Open roots (must capture) and a closed root (<span class="warn">must not</span> — a hard limit).</span></li>
+
+    <li><a href="05-multi-step-wizard.html">Multi-step wizard</a>
+      <span class="why">Paged modal with Next/Back/Submit — the LinkedIn Easy Apply and Workday shape. Must produce <strong>one</strong> document, not one per step.</span></li>
+
+    <li><a href="06-iframes.html">Iframes</a>
+      <span class="why">Same-origin nested form plus <code>srcdoc</code>.</span></li>
+
+    <li><a href="07-sensitive.html">Sensitive data</a>
+      <span class="why">Passwords, cards, SSN, EEO self-identification. Tests exclusion and redaction.</span></li>
+
+    <li><a href="08-dynamic.html">Dynamic fields</a>
+      <span class="why">Fields injected late, conditional reveals, a repeater that adds rows.</span></li>
+
+    <li><a href="09-custom-widgets.html">Custom widgets</a>
+      <span class="why">Comboboxes, a fake react-select, contenteditable rich text, range, date, file.</span></li>
+
+    <li><a href="10-hostile.html">Hostile markup</a>
+      <span class="why">No ids, no names, no labels, generic placeholders, inline <code>&lt;style&gt;</code> between fields.</span></li>
+
+    <li><a href="11-validation.html">Rejected submissions</a>
+      <span class="why">Press Submit repeatedly with errors. Must produce <strong>one</strong> record, not one per press — and rejected attempts stay <code>draft</code>.</span></li>
+
+    <li><a href="12-media-noise.html">Media / social noise</a>
+      <span class="why">Volume, likes, toggles, search, settings. The player must produce <strong>zero</strong> records; the real form beside it must still be captured.</span></li>
+  </ol>
+
+  <p class="lede">
+    Automated assertions for these pages live in <code>testbed/testbed.test.js</code> —
+    <code>npm test</code> runs them. Serve this folder with <code>node spike/serve.js</code>.
+  </p>
+</body>
+</html>

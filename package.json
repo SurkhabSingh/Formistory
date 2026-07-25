@@ -1,0 +1,21 @@
+{
+  "name": "formistory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-only browser extension that archives the web forms you fill in, as readable documents",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SurkhabSingh/Formistory.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.14"
+  },
+  "scripts": {
+    "test": "node --test",
+    "serve": "node spike/serve.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}
