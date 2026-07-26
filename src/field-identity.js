@@ -193,16 +193,26 @@
     return /^\s*search\b/i.test(aria) || /^\s*search\b/i.test(ph);
   }
 
-  const CHOICE_INPUT_TYPES = new Set(["radio", "checkbox", "switch"]);
+  // Picking from a list the site wrote is not the same as composing an answer.
+  // A product page's colour and model dropdowns are <select>s, as are "Size" and
+  // "Quantity" — data, but never the thing that makes a page worth archiving.
+  const CHOICE_INPUT_TYPES = new Set(["radio", "checkbox", "switch", "select"]);
+
+  // Structured values picked rather than written.
+  const PICKER_INPUT_TYPES = new Set([
+    "number", "date", "time", "datetime-local", "month", "week", "file",
+  ]);
 
   /**
    * Sort a control into one class. The capture gate is a pure function of these:
    *   excluded  — never stored (passwords, payment, bot tokens)
-   *   passenger — UI, not an answer; stored only if the scope is already a form,
-   *               never counts toward "is this a form?"
-   *   search    — a search box; kept only when it sits among other data fields
-   *   choice    — a radio/checkbox answer inside a real question
-   *   text      — everything else that holds a typed/selected answer
+   *   passenger — UI, not an answer (volume, colour picker, like toggle); stored
+   *               only if the scope already qualifies, never counts toward the gate
+   *   search    — a search box; kept only among other data fields
+   *   choice    — one of a fixed set the site offered (radio, checkbox, select)
+   *   picker    — a structured value (number, date, file)
+   *   text      — prose the user actually composed. This is the class that
+   *               decides whether a page is a form worth keeping.
    */
   function classify(el) {
     if (isExcluded(el)) return "excluded";
@@ -210,6 +220,7 @@
     if (PASSENGER_TYPES.has(type)) return "passenger";
     if (isSearchField(el)) return "search";
     if (CHOICE_INPUT_TYPES.has(type)) return "choice";
+    if (PICKER_INPUT_TYPES.has(type)) return "picker";
     return "text";
   }
 

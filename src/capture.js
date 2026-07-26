@@ -313,6 +313,9 @@
    */
   function flush(status, { force = false, only = null } = {}) {
     if (!drafts.size) return;
+    // Nothing is written before a submit, so until one happens there is no point
+    // sweeping or serialising. Drafts still accumulate in memory meanwhile.
+    if (!submitScopes.size && !sentIds.size) return;
     sweep();
     for (const [scopeKey, draft] of drafts) {
       // A status belongs to the scope that produced it. Without this, submitting

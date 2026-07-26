@@ -157,36 +157,38 @@
   const isEmpty = (draft) => !Object.values(draft.fields).some(hasValue);
 
   /**
-   * The gate — is this scope a form worth archiving, or media/social noise?
+   * The gate — is this a form the user submitted, or something else entirely?
    *
    * Pure over the draft plus two scope facts the caller tracks (`sawAuth`, a
-   * password field was seen; `submit`, an explicit submit fired). Passenger and
-   * search fields never count toward the thresholds, so a volume slider, a like
-   * toggle, or a lone search box can never clear the bar on their own.
+   * password field was seen; `submit`, an explicit submit fired for this scope).
    *
-   * The floor is two filled answer fields — deliberately dropping single-field
-   * pages, which is what let one volume drag become a record. A single field is
-   * archived only when an explicit submit says it was really a form.
+   * Three rules, in order of how much noise each removes.
    */
   function isFormLike(draft, { sawAuth = false, submit = false } = {}) {
+    // 1. Only on submit. A form still being filled in, or wandered away from, is
+    //    never archived — nothing reaches disk until it is actually sent.
+    if (!submit) return false;
+
     const fs = Object.values(draft.fields);
-    const isCore = (f) => f.kind === "text" || f.kind === "choice";
+    const isCore = (f) => f.kind === "text" || f.kind === "choice" || f.kind === "picker";
     const core = fs.filter(isCore);
     const present = core.length;
     const filled = core.filter(hasValue).length;
-    const textish = core.filter((f) => f.kind === "text" && hasValue(f)).length;
-    // A login/signup: an auth field, at most a couple of text fields, and nothing
-    // that looks like an application. Checkboxes deliberately do NOT count —
-    // "Remember me" and "I accept the terms" appear on nearly every login and
-    // signup form, and counting them let every one of them through.
-    const hasRichData = fs.some((f) => ["select", "textarea", "file"].includes(f.inputType));
+    // Only prose the user composed. Choosing a colour and a model from two
+    // dropdowns is not writing an answer — that is a product configurator, and
+    // this is the rule that keeps it out.
+    const wrote = core.filter((f) => f.kind === "text" && hasValue(f)).length;
 
-    if (present < 2) return false;
+    // 2. At least two answers, at least one of them written rather than picked.
+    if (present < 2 || filled < 2 || wrote < 1) return false;
+
+    // 3. Never a login or signup: a password beside a couple of fields, with
+    //    nothing application-shaped. Checkboxes deliberately do not count —
+    //    "Remember me" and "I accept the terms" are on nearly every such form.
+    const hasRichData = fs.some((f) => ["textarea", "file"].includes(f.inputType));
     if (sawAuth && filled <= 2 && !hasRichData) return false;
-    if (textish >= 1 && filled >= 2) return true;
-    if (filled >= 3 && (textish >= 1 || submit)) return true;
-    if (filled >= 1 && submit) return true;
-    return false;
+
+    return true;
   }
 
   return {

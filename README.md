@@ -38,8 +38,8 @@ Fill in any form, then click the toolbar icon → **Open archive**.
 The viewer lists submissions by day and renders each as a document. Search runs across every
 question and answer and highlights matches in place.
 
-It **updates live** — leave it open in a tab and fill in a form elsewhere; the record appears as you
-type. Export writes the whole archive as JSON. Deletion is per-record or all at once.
+It **updates live** — leave it open in a tab and the record appears the moment you submit a form
+elsewhere. Export writes the whole archive as JSON. Deletion is per-record or all at once.
 
 ## What counts as a form
 
@@ -47,16 +47,25 @@ The hard part isn't capturing text — it's *not* capturing everything else. Cha
 YouTube, liking a video, or typing in a search box are all "input events" too, and a naive version
 of this tool archives them.
 
-So capture is gated:
+Three rules decide it, and all three must hold:
 
-- **Controls are classified.** A volume slider, colour picker or like/follow toggle is a
-  *passenger* — recorded only if the surrounding page is already a form, and never able to make a
-  page look like one. A lone search box is ignored.
-- **Two filled answer fields minimum** (or one, plus an explicit Submit) before anything is stored.
-- **The sweep is bounded** to the form's own region, so touching one form can't drag in unrelated
-  controls elsewhere on the page.
-- **Auth forms are skipped.** A login or signup — an email and a password, with nothing
-  application-shaped about it — is never archived.
+1. **Only on submit.** A form you are still filling in — or wandered away from — is never archived.
+   Nothing reaches disk until you actually send it.
+2. **At least two answers, and at least one you wrote yourself.** Choosing a colour and a model from
+   two dropdowns isn't writing an answer — that's a product configurator, not a form worth keeping.
+   Dropdowns, radios and checkboxes are still *stored*; they just can't be the reason a page is
+   archived.
+3. **Never a login or signup.** A password beside a couple of fields, with nothing
+   application-shaped about it, is skipped entirely.
+
+Underneath those, controls are classified: a volume slider, colour picker or like/follow toggle is a
+*passenger*, recorded only if the page already qualifies and never able to make it qualify. A lone
+search box is ignored. The prefill sweep is bounded to the form's own region, so submitting one form
+can't drag in unrelated controls from elsewhere on the page.
+
+The cost of rule 1 is real and deliberate: **fill in a long application, and if the tab dies before
+you submit, nothing is saved.** Strictness beat recall here — a tool that quietly archives your
+shopping and your video settings is worse than one that occasionally misses.
 
 ## What is never stored
 
@@ -85,10 +94,12 @@ content script (every frame)                        background
 └──────────────────────────────────────┘           └────────────────────┘
 ```
 
-**Capture does not use the `submit` event.** Ashby's application form has no `<form>` element and
-never navigates; Workday's is an eight-step wizard. So input events are journaled and the draft is
-finalised on whichever signal arrives first — a real submit, a click on a submit-like control, an
-SPA route change, or the page going away. Anything unfinished is kept as `abandoned`.
+**Submitting is more than the `submit` event.** Ashby's application form has no `<form>` element and
+never navigates; Workday's is an eight-step wizard; LinkedIn Easy Apply is a paged modal. So input
+events are journaled into an in-memory draft, and the draft is written only when a submission is
+recognised — a real `submit`, or a click on a control that reads as final ("Submit", "Send
+application", "Apply now"). Advancing a wizard step saves progress into the same draft without
+finalising it, so one application is one record rather than eight.
 
 **IndexedDB lives in the background only.** A content script's IndexedDB belongs to the *page's*
 origin, so writing there would scatter the archive across every site you visit.
@@ -144,8 +155,8 @@ or held back is logged with the reason.
 
 **Design choices**
 
-- A form where you filled a **single field and never submitted** is not saved — the same floor that
-  keeps out media noise.
+- A form you never submitted is not saved, however much you typed into it.
+- A form with no written answers — only dropdowns, radios or checkboxes — is not saved.
 - A form **split across cross-origin iframes** is stored as one record per frame, not merged.
 - A widget holding its value only in JavaScript state, with no DOM control behind it, is invisible.
 - File inputs record the **filename only**; contents are never read.

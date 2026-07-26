@@ -58,25 +58,24 @@ const APPLICATION = `
     </form>
   </body>`;
 
-test("typing produces a draft carrying question and answer", async () => {
+test("typing alone is never archived — only submitting is", async () => {
   const { dom, sent, doc } = boot(APPLICATION);
 
-  // Two fields: the gate needs two filled answers before a page counts as a form,
-  // so one control alone (a volume slider, a like toggle) can never trigger it.
   doc.getElementById("n").value = "Ada Lovelace";
   fire(doc.getElementById("n"), "input");
   doc.getElementById("w").value = "The problem is interesting.";
   fire(doc.getElementById("w"), "input");
-  await sleep(1000); // clear the 800ms debounce
+  await sleep(1000); // well past the 800ms debounce
 
-  assert.ok(sent.length >= 1, "nothing was sent to the background");
+  assert.equal(sent.length, 0, "an unsubmitted form reached the archive");
+
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
+
+  assert.ok(sent.length, "submitting did not archive the form");
   const { submission } = sent.at(-1);
-  assert.equal(sent.at(-1).type, "submission/put");
-  assert.equal(submission.status, "draft");
-
-  const name = submission.fields.find((f) => f.label === "Full name");
-  assert.ok(name, "the typed field is missing from the draft");
-  assert.equal(name.value, "Ada Lovelace");
+  assert.equal(submission.status, "submitted");
+  assert.equal(submission.fields.find((f) => f.label === "Full name").value, "Ada Lovelace");
   dom.window.close();
 });
 
@@ -136,6 +135,7 @@ test("a form with no <form> element is still captured", async () => {
     `<body><div>
        <label for="exp">Describe your experience</label><input id="exp" name="exp">
        <label for="loc">Where are you based?</label><input id="loc" name="loc">
+       <button type="button" id="go">Submit application</button>
      </div></body>`
   );
 
@@ -143,9 +143,10 @@ test("a form with no <form> element is still captured", async () => {
   fire(doc.getElementById("exp"), "input");
   doc.getElementById("loc").value = "Chandigarh";
   fire(doc.getElementById("loc"), "input");
-  await sleep(1000);
+  click(dom, doc.getElementById("go"));
+  await sleep(60);
 
-  assert.ok(sent.length, "no draft was produced for a form-less page");
+  assert.ok(sent.length, "a submitted form-less page was not captured");
   const submission = sent.at(-1).submission;
   assert.equal(submission.scopeKey, "page");
   const a = Object.fromEntries(submission.fields.map((f) => [f.label, f.value]));
@@ -196,7 +197,8 @@ test("fields inside open shadow roots are captured", async () => {
   // Events crossing a shadow boundary retarget to the host, so reading e.target
   // at document level yielded a non-field and dropped this silently.
   inner.dispatchEvent(new dom.window.Event("input", { bubbles: true, composed: true }));
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
 
   const a = Object.fromEntries(sent.at(-1).submission.fields.map((f) => [f.label, f.value]));
   assert.equal(a["Shadow field"], "typed in shadow");
@@ -212,6 +214,7 @@ test("the sweep does not invent records for forms nobody touched", async () => {
       <form id="contact">
         <label for="nm">Name</label><input id="nm" name="nm">
         <label for="m">Message</label><textarea id="m" name="m"></textarea>
+        <button type="submit">Send</button>
       </form>
     </body>`);
 
@@ -219,10 +222,11 @@ test("the sweep does not invent records for forms nobody touched", async () => {
   fire(doc.getElementById("nm"), "input");
   doc.getElementById("m").value = "Hello";
   fire(doc.getElementById("m"), "input");
-  await sleep(1000);
+  fire(doc.getElementById("contact"), "submit");
+  await sleep(60);
 
   const all = sent.flatMap((s) => s.submission.fields.map((f) => f.label));
-  assert.ok(all.includes("Message"), "the touched form was not captured");
+  assert.ok(all.includes("Message"), "the submitted form was not captured");
   assert.ok(!all.includes("Search"), "an untouched search form was captured anyway");
   dom.window.close();
 });
@@ -419,7 +423,8 @@ test("clearing a field removes the answer from the record", async () => {
   fire(doc.getElementById("n"), "input");
   doc.getElementById("x").value = "my private phone number";
   fire(doc.getElementById("x"), "input");
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
   assert.ok(JSON.stringify(sent).includes("private phone"), "setup: value was never captured");
 
   // Thought better of it.
@@ -451,7 +456,8 @@ test("a record is retired when its form drops below the floor", async () => {
     doc.getElementById(id).value = v;
     fire(doc.getElementById(id), "input");
   }
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
   const stored = sent.at(-1).submission.id;
 
   for (const id of ["n", "x"]) {
@@ -488,13 +494,15 @@ test("submitting one form does not mark another form as submitted", async () => 
   fire(doc.getElementById("a"), "submit");
   await sleep(60);
 
-  const bRecords = sent.filter((m) => m.submission.fields.some((f) => f.label === "Cover letter"));
-  assert.ok(bRecords.length, "setup: the second form was never captured");
-  assert.notEqual(
-    bRecords.at(-1).submission.status,
-    "submitted",
-    "an untouched form was marked submitted by its neighbour"
-  );
+  // Only the submitted form may be archived. The second is filled in but never
+  // sent, so it must leave no trace at all.
+  const puts = sent.filter((m) => m.type === "submission/put");
+  assert.equal(puts.length > 0, true, "the submitted form was not captured");
+  for (const m of puts) {
+    const labels = m.submission.fields.map((f) => f.label);
+    assert.ok(labels.includes("Your message"), "the wrong form was archived");
+    assert.ok(!labels.includes("Cover letter"), "an unsubmitted form was archived alongside it");
+  }
   dom.window.close();
 });
 
@@ -555,6 +563,7 @@ test("secrets in the page URL are not stored", async () => {
     `<body><form>
        <label for="n">Name</label><input id="n" name="n">
        <label for="m">Message</label><textarea id="m" name="m"></textarea>
+       <button type="submit">Send</button>
      </form></body>`,
     "https://example.com/invite?token=SECRET123&ref=newsletter"
   );
@@ -563,7 +572,8 @@ test("secrets in the page URL are not stored", async () => {
   fire(doc.getElementById("n"), "input");
   doc.getElementById("m").value = "Hello";
   fire(doc.getElementById("m"), "input");
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
 
   const raw = JSON.stringify(sent);
   assert.ok(!raw.includes("SECRET123"), "a URL token was archived");
@@ -600,6 +610,56 @@ test("a volume slider and a like toggle produce no record", async () => {
   dom.window.close();
 });
 
+test("a product configurator is not archived, even when it submits", async () => {
+  // Reported in the wild: a mouse product page where only colour and model were
+  // chosen. Both are <select>s, and treating a dropdown as a written answer let
+  // the page clear the bar. Choosing from a list the site wrote is not writing.
+  const { dom, sent, doc } = boot(`
+    <body><form>
+      <label for="colour">Colour</label>
+      <select id="colour" name="colour"><option>Black</option><option>White</option></select>
+      <label for="model">Model</label>
+      <select id="model" name="model"><option>Wireless</option><option>Wired</option></select>
+      <label for="qty">Quantity</label><input id="qty" name="qty" type="number" value="1">
+      <button type="submit">Add to cart</button>
+    </form></body>`, "https://shop.example.com/mouse");
+
+  doc.getElementById("colour").selectedIndex = 1;
+  fire(doc.getElementById("colour"), "change");
+  doc.getElementById("model").selectedIndex = 1;
+  fire(doc.getElementById("model"), "change");
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
+
+  assert.equal(sent.length, 0, `a product configurator was archived: ${JSON.stringify(sent)}`);
+  dom.window.close();
+});
+
+test("a configurator becomes archivable once you actually write something", async () => {
+  // The same page with a gift message typed in is a form you authored, and is
+  // kept — the rule is about written content, not about dropdowns being banned.
+  const { dom, sent, doc } = boot(`
+    <body><form>
+      <label for="colour">Colour</label>
+      <select id="colour" name="colour"><option>Black</option><option>White</option></select>
+      <label for="msg">Gift message</label><textarea id="msg" name="msg"></textarea>
+      <button type="submit">Place order</button>
+    </form></body>`, "https://shop.example.com/mouse");
+
+  doc.getElementById("colour").selectedIndex = 1;
+  fire(doc.getElementById("colour"), "change");
+  doc.getElementById("msg").value = "Happy birthday!";
+  fire(doc.getElementById("msg"), "input");
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
+
+  assert.ok(sent.length, "a form with a written answer was rejected");
+  const a = Object.fromEntries(sent.at(-1).submission.fields.map((f) => [f.label, f.value]));
+  assert.equal(a["Gift message"], "Happy birthday!");
+  assert.equal(a["Colour"], "White", "the dropdown answer should still be kept alongside");
+  dom.window.close();
+});
+
 test("a lone search box produces no record", async () => {
   const { dom, sent, doc } = boot(
     `<body><form role="search"><input id="s" name="q" type="search"></form></body>`
@@ -619,6 +679,7 @@ test("a field named 's' inside a real form is still kept", async () => {
       <label for="s">School</label><input id="s" name="s">
       <label for="deg">Degree</label><input id="deg" name="deg">
       <label for="yr">Year</label><input id="yr" name="yr">
+      <button type="submit">Submit application</button>
     </form></body>`);
 
   doc.getElementById("s").value = "Panjab University";
@@ -627,7 +688,8 @@ test("a field named 's' inside a real form is still kept", async () => {
   fire(doc.getElementById("deg"), "input");
   doc.getElementById("yr").value = "2021";
   fire(doc.getElementById("yr"), "input");
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
 
   assert.ok(sent.length, "a real form was rejected");
   const a = Object.fromEntries(sent.at(-1).submission.fields.map((f) => [f.label, f.value]));
@@ -663,6 +725,7 @@ test("a passenger control on a real form is kept but does not gate it", async ()
       <label for="loc">Location</label><input id="loc" name="loc">
       <label for="sal">Expected salary</label>
       <input id="sal" name="sal" type="range" min="40" max="250" value="120" aria-label="Expected salary">
+      <button type="submit">Submit application</button>
     </form></body>`);
 
   doc.getElementById("role").value = "Engineer";
@@ -671,7 +734,8 @@ test("a passenger control on a real form is kept but does not gate it", async ()
   fire(doc.getElementById("loc"), "input");
   doc.getElementById("sal").value = "140";
   fire(doc.getElementById("sal"), "input");
-  await sleep(1000);
+  fire(doc.querySelector("form"), "submit");
+  await sleep(60);
 
   assert.ok(sent.length, "a real form with a range was rejected");
   const a = Object.fromEntries(sent.at(-1).submission.fields.map((f) => [f.label, f.value]));
